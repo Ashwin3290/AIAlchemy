@@ -6,6 +6,9 @@ import gridfs
 
 app = Flask((__name__))
 api=Api(app) 
+client = MongoClient("mongodb://localhost:27017")  
+db = client["MLAlchemy"]  
+collection = db["data"] 
 
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
 MAX_CONTENT_LENGTH = 30 * 1024 * 1024  # 30MB
