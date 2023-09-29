@@ -18,7 +18,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
 
-
+#student side api
 student_roll =reqparse.RequestParser()
 student_roll.add_argument("roll",type=int,help="none")
 student_name=reqparse.RequestParser()
