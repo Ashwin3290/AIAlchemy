@@ -24,16 +24,15 @@ student_roll.add_argument("roll",type=int,help="none")
 
 student_name=reqparse.RequestParser()
 student_name.add_argument("name",type=str,help="Send student name")
+student_name=reqparse.RequestParser()
+student_name.add_argument("name",type=str,help="Send student name")
 class roll(Resource):
     def post(self):
         args=student_roll.parse_args()
         return {"roll":args["roll"]}
 
 api.add_resource(roll,"/roll")
-=========
-student_name=reqparse.RequestParser()
-student_name.add_argument("name",type=str,help="Send student name")
->>>>>>>>> Temporary merge branch 2
+
 
 class name(Resource):
     def post(self):
