@@ -15,7 +15,7 @@ MAX_CONTENT_LENGTH = 30 * 1024 * 1024  # 30MB
 
 app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
+fs=gridfs(GridFS(db),collection="data")
 
 
 #student side api
@@ -45,34 +45,56 @@ api.add_resource(name,"/name")
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-class FileUpload(Resource):
+class file_upload(Resource):
     def post(self):
         try:
-            uploaded_file = request.files['file']  
+            userid = request.form['userid']
+            time = request.form['time']
+            location = request.form['location']
+            file_type = request.form['type']
+            uploaded_file = request.files['file']
+            file_data = uploaded_file.read()
             if uploaded_file and allowed_file(uploaded_file.filename):
-                if len(uploaded_file.read()) > MAX_CONTENT_LENGTH:
+                if len(file_data) > MAX_CONTENT_LENGTH:
                     return jsonify({
-                        "status": "error",
-                        "message": "File size exceeds the maximum allowed size (30MB)"
+                        "status": False,
+                        "message": "File size exceeds the maximum allowed size (5MB)"
                     })
 
-                uploaded_file.seek(0)
-                file_id = fs.put(uploaded_file.read(), filename=secure_filename(uploaded_file.filename),
-                                 content_type=uploaded_file.content_type)
+                filename = secure_filename(uploaded_file.filename)
+                content_type = uploaded_file.content_type
+                uploaded_file.seek(0)                
+                result = report.insert_one({"file_data": file_data})
+                file_id = str(result.inserted_id)
+                file_url = url_for("get_report", file_id=file_id, _external=True)
+
+                reportdata = {
+                    "userid": userid,
+                    "time": time,
+                    "location": location,
+                    "filename": filename,
+                    "file_type": file_type,
+                    "type": file_type,
+                    "file_id": file_id,
+                    "file_url": file_url
+                }
+
+                report_data.insert_one(reportdata)
 
                 return jsonify({
-                    "status": "success",
-                    "message": "File uploaded and saved to MongoDB",
-                    "file_id": str(file_id)
+                    "status": True,
+                    "message": "File uploaded",
+                    "file_id": file_id,
+                    "file_url": file_url  
                 })
             else:
                 return jsonify({
-                    "status": "error",
-                    "message": "Invalid file format. Allowed formats: XLSX, CSV"
+                    "status": False,
+                    "message": f"Invalid file format. Allowed formats:{' '.join(ALLOWED_EXTENSIONS)}"
                 })
         except Exception as e:
             return jsonify({
-                "status": "error",
+                "status": False,
                 "message": str(e)
             })
 
