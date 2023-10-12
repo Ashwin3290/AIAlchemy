@@ -1,8 +1,17 @@
-from flask import Flask, request, jsonify
-from flask_restful import Api,Resource,reqparse
+from flask import Flask, request, jsonify,url_for,send_file
 from pymongo import MongoClient
-from bson import Binary
+from flask_restful import Api,Resource,reqparse
+import pickle 
+import numpy as np
+import warnings
+import time
+import os
+import json
+from bson import Binary,ObjectId
 import gridfs
+from werkzeug.datastructures import FileStorage
+from werkzeug.utils import secure_filename
+import io
 
 app = Flask((__name__))
 api=Api(app) 
@@ -11,12 +20,10 @@ db = client["MLAlchemy"]
 collection = db["data"] 
 
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
-MAX_CONTENT_LENGTH = 30 * 1024 * 1024  # 30MB
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 30MB
 
 app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-fs=gridfs(GridFS(db),collection="data")
-
 
 #student side api
 student_roll =reqparse.RequestParser()
@@ -58,7 +65,7 @@ class file_upload(Resource):
                 if len(file_data) > MAX_CONTENT_LENGTH:
                     return jsonify({
                         "status": False,
-                        "message": "File size exceeds the maximum allowed size (5MB)"
+                        "message": "File size exceeds the maximum allowed size (16MB)"
                     })
 
                 filename = secure_filename(uploaded_file.filename)
