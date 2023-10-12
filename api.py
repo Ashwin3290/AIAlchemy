@@ -12,18 +12,18 @@ import gridfs
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 import io
+import random
 
 app = Flask((__name__))
 api=Api(app) 
 client = MongoClient("mongodb://localhost:27017")  
 db = client["MLAlchemy"]  
-collection = db["data"] 
+dataset = db["dataset"]
+user_data=db["user_data"]
+model=db["model_data"]
 
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 30MB
-
-app.config['UPLOAD_FOLDER'] = 'uploads'
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
 #student side api
 student_roll =reqparse.RequestParser()
@@ -47,13 +47,22 @@ api.add_resource(name,"/name")
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+class generate_session_id(Resource):
+    def get(self):
+        for i in range(1000):
+            sid=random.randint(1000,9999)
+            if not sid in user_data.distinct("session_id"):
+                return {"status":True,"session_id":sid}
+        return {"status":False,"session_id":None}
+
+api.add_resource(generate_session_id,"/session_id_gen")
+
 class file_upload(Resource):
     def post(self):
         try:
-            userid = request.form['userid']
-            time = request.form['time']
-            location = request.form['location']
-            file_type = request.form['type']
+            session_id = request.form['session_id']
+            password = request.form['password']
+            option=request.form["option"]
             uploaded_file = request.files['file']
             file_data = uploaded_file.read()
             if uploaded_file and allowed_file(uploaded_file.filename):
@@ -66,22 +75,21 @@ class file_upload(Resource):
                 filename = secure_filename(uploaded_file.filename)
                 content_type = uploaded_file.content_type
                 uploaded_file.seek(0)                
-                result = report.insert_one({"file_data": file_data})
+                result = dataset.insert_one({"file_data": file_data, "filename": filename, "content_type": content_type, "session_id": session_id, "password": password})
                 file_id = str(result.inserted_id)
                 file_url = url_for("get_report", file_id=file_id, _external=True)
 
-                reportdata = {
-                    "userid": userid,
-                    "time": time,
-                    "location": location,
-                    "filename": filename,
-                    "file_type": file_type,
-                    "type": file_type,
+                data = {
+                    "session_id": session_id,
+                    "password": password,
+                    "option":option,
                     "file_id": file_id,
-                    "file_url": file_url
+                    "dataset_url": file_url,
+                    "model_url":None,
+                    "model_id":None
                 }
 
-                report_data.insert_one(reportdata)
+                user_data.insert_one(data)
 
                 return jsonify({
                     "status": True,
