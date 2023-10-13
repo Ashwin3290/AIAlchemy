@@ -13,6 +13,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 import io
 import random
+import pycaret.regression as rgr
 
 app = Flask((__name__))
 api=Api(app) 
@@ -22,33 +23,14 @@ dataset = db["dataset"]
 user_data=db["user_data"]
 model=db["model_data"]
 
+
+credential=reqparse.RequestParser()
+credential.add_argument("session_id",type=int,help="session_id is required",required=True)
+credential.add_argument("password",type=str,help="password is required",required=True)
+
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
-#student side api
-student_roll =reqparse.RequestParser()
-student_roll.add_argument("roll",type=int,help="none")
-
-student_name=reqparse.RequestParser()
-student_name.add_argument("name",type=str,help="Send student name")
-student_name=reqparse.RequestParser()
-student_name.add_argument("name",type=str,help="Send student name")
-
-class roll(Resource):
-    def post(self):
-        args=student_roll.parse_args()
-        return {"roll":args["roll"]}
-
-api.add_resource(roll,"/roll")
-
-
-class name(Resource):
-    def post(self):
-        args=student_name.parse_args()
-        processed=args["name"].split("-")
-        return jsonify(processed)
-
-api.add_resource(name,"/name")
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -57,7 +39,19 @@ class generate_session_id(Resource):
         for i in range(1000):
             sid=random.randint(1000,9999)
             if not sid in user_data.distinct("session_id"):
-                return {"status":True,"session_id":sid}
+                password=random.choices(['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm','1','2','3','4','5','6','7','8','9','0'], k=6)
+                data = {
+                    "session_id": session_id,
+                    "password": password,
+                    "option":None,
+                    "file_id": None,
+                    "dataset_url": None,
+                    "model_url":None,
+                    "model_id":None
+                }
+
+                return {"status":True,"session_id":sid,"password":password}
+
         return {"status":False,"session_id":None}
 
 api.add_resource(generate_session_id,"/session_id_gen")
@@ -89,6 +83,7 @@ class file_upload(Resource):
                     "password": password,
                     "option":option,
                     "file_id": file_id,
+                    "content_type": content_type,
                     "dataset_url": file_url,
                     "model_url":None,
                     "model_id":None
@@ -113,6 +108,25 @@ class file_upload(Resource):
                 "message": str(e)
             })
 
+api.add_resource(file_upload,"/upload")
+
+class regression(Resource):
+    def get(self):
+        args=credential.parse_args()
+        session_id=args["session_id"]
+        password=args["password"]
+        if user_data.find_one({"session_id":session_id,"password":password}):
+            include={"file_id":1,"content_type":1}
+            data=user_data.find_one({"session_id":session_id,"password":password},include)
+            if data["content_type"]=="application/csv":
+                df=pd.read_csv(io.bytesIO(data["file_data"]))
+            elif data["content_type"]=="application/xlsx":
+                df=pd.read_excel(io.bytesIO(data["file_data"]))
+            rgr.setup(df, target=chosen_target, silent=True)
+            setup_df = pull()
+            best_model = compare_models()
+            compare_df = pull()
+            save_model(best_model, 'best_model')
 
 if __name__ == '__main__':
     app.run(debug=True)
