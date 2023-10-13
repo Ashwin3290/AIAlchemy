@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 
 api/tempCodeRunnerFile.py
+Lib
+Scripts
+share
+etc
