@@ -1,0 +1,16 @@
+[{
+  "_id": {
+    "$oid": "653b81470dc4014fb84415b6"
+  },
+  "time_stamp": {
+    "$date": "2023-10-27T15:57:05.552Z"
+  },
+  "session_id": "5304",
+  "password": "y9dveb",
+  "option": "c",
+  "file_id": "653b81470dc4014fb84415b5",
+  "content_type": "text/csv",
+  "dataset_url": "http://127.0.0.1:5000/get_dataset/653b81470dc4014fb84415b5",
+  "model_url": "http://127.0.0.1:5000/get_model/%3Cpymongo.results.InsertOneResult%20object%20at%200x000001CDADC49240%3E",
+  "model_id": "<pymongo.results.InsertOneResult object at 0x000001CDADC49240>"
+}]

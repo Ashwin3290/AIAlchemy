@@ -27,7 +27,7 @@ model=db["model_data"]
 
 
 credential=reqparse.RequestParser()
-credential.add_argument("session_id",type=int,help="session_id is required",required=True)
+credential.add_argument("session_id",type=str,help="session_id is required",required=True)
 credential.add_argument("password",type=str,help="password is required",required=True)
 credential.add_argument("target",type=str,help="target is required",required=True)
 
@@ -48,11 +48,11 @@ def check_validity(session_id,password):
         include={"file_id":1}
         data=user_data.find_one({"session_id":session_id,"password":password},include)
         file_data=dataset.find({"_id":ObjectId(data["file_id"])},{"file_data":1,"content_type":1})
-        print(dict(file_data))
+        file_data=list(file_data)[0]
         if file_data["content_type"]=="text/csv":
-            df=pd.read_csv(io.bytesIO(file_data["file_data"]))
+            df=pd.read_csv(io.BytesIO(file_data["file_data"]))
         elif file_data["content_type"]=="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-            df=pd.read_excel(io.bytesIO(file_data["file_data"]))
+            df=pd.read_excel(io.BytesIO(file_data["file_data"]))
         else:
             return {"status":False,"message":"Invalid file format"}
         
@@ -144,9 +144,9 @@ api.add_resource(file_upload,"/upload")
 
 
 @app.route("/get_model/<file_id>")
-def get_model(file_id):
-    file_data = model.find_one({"_id":ObjectId(file_id)},{"model":1})
-    data=user_data.find_one({"model_id":file_id})
+def get_model(model_id):
+    file_data = model.find_one({"_id":ObjectId(model_id)},{"model":1})
+    data=user_data.find_one({"model_id":model_id})
     if file_data:
         return send_file(
             io.BytesIO(file_data["model"]),
@@ -182,31 +182,30 @@ def get_dataset(file_id):
 class regression(Resource):
     def get(self):
         args=credential.parse_args()
-        rgr=RegressionExperiment()
         session_id=args["session_id"]
         password=args["password"]
         choosen_target=args["target"]
+        rgr=RegressionExperiment()
+        print("Experimnet")
         validity=check_validity(session_id,password)
         if isinstance(validity,pd.DataFrame):
             df=validity
+            print("validity")
         else:
             return validity
-        rgr.setup(df, target=chosen_target, silent=True)
+        rgr.setup(df, target=choosen_target)
         best_model = rgr.compare_models()
         compare_df = rgr.pull()
+        print("compare_df")
         rgr.finalize_model(best_model)
-        pipeline=pickle.dumps(rgr)
+        pipeline=pickle.dumps(rgr.save_model(best_model, model_name='best_model'))
+        os.remove("best_model.pkl")
+        compare_df = pickle.dumps(compare_df)
         timestamp=datetime.now()
-        model_id=model.insert_one({"time_stamp":timestamp,"model":"pipeline"})
-        model_url=url_for("get_model",model_id=model_id,_external=True)
-        user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":model_id,"time_stamp":timestamp}})
-        data={
-            "time_stamp":timestamp,
-            "session_id": session_id,
-            "password": password,
-            
-        }
-        user_data.insert_one()
+        model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df})
+        print("model_id")
+        model_url=url_for("get_model",file_id=model_id,_external=True)
+        user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":str(model_id),"time_stamp":timestamp}})
         return {"status":True,"message":"Model created successfully"}
 api.add_resource(regression,"/regression")
 
@@ -217,7 +216,6 @@ class classification(Resource):
         session_id=args["session_id"]
         password=args["password"]
         choosen_target=args["target"]
-
         clf=ClassificationExperiment
         print("Experimnet")
         validity=check_validity(session_id,password)
@@ -226,17 +224,19 @@ class classification(Resource):
             print("validity")
         else:
             return validity
-        clf.setup(df, target=chosen_target, silent=True)
+        clf.setup(df, target=choosen_target)
         best_model = clf.compare_models()
         compare_df = clf.pull()
         print("compare_df")
         clf.finalize_model(best_model)
-        pipeline=pickle.dumps(clf)
+        pipeline=pickle.dumps(clf.save_model(best_model, model_name='best_model'))
+        os.remove("best_model.pkl")
+        compare_df = pickle.dumps(compare_df)
         timestamp=datetime.now()
-        model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline})
+        model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df})
         print("model_id")
-        model_url=url_for("get_model",model_id=model_id,_external=True)
-        user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":model_id,"time_stamp":timestamp}})
+        model_url=url_for("get_model",file_id=model_id,_external=True)
+        user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":str(model_id),"time_stamp":timestamp}})
         return {"status":True,"message":"Model created successfully"}
 api.add_resource(classification,"/classification")
 
