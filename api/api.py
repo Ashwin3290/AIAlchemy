@@ -40,7 +40,7 @@ def allowed_file(filename):
 def in_user(session_id,password):
     return user_data.find_one({"session_id":session_id,"password":password})
 
-def get_session_details(Resource):
+def get_session_details(session_id,password):
     return user_data.find_one({"session_id":session_id,"password":password})
 
 def check_validity(session_id,password):
@@ -182,22 +182,27 @@ def get_dataset(file_id):
 class regression(Resource):
     def get(self):
         args=credential.parse_args()
-        rgr=RegressionExperiment()
         session_id=args["session_id"]
         password=args["password"]
         choosen_target=args["target"]
+        rgr=RegressionExperiment
+        print("Experiment")
         validity=check_validity(session_id,password)
         if isinstance(validity,pd.DataFrame):
             df=validity
+            print("validity")
         else:
             return validity
         rgr.setup(df, target=choosen_target)
         best_model = rgr.compare_models()
         compare_df = rgr.pull()
+        print("compare_df")
         rgr.finalize_model(best_model)
-        pipeline=pickle.dumps(rgr)
+        pipeline=pickle.dumps(rgr.save_model(best_model, model_name='best_model'))
+        os.remove("best_model.pkl")
         timestamp=datetime.now()
-        model_id=model.insert_one({"time_stamp":timestamp,"model":"pipeline"})
+        model_id=model.insert_one({"time_stamp":timestamp,"model":"pipeline","compare_df":compare_df})
+        print("model_id")
         model_url=url_for("get_model",file_id=model_id,_external=True)
         user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":model_id,"time_stamp":timestamp}})
         return {"status":True,"message":"Model created successfully"}
@@ -225,6 +230,7 @@ class classification(Resource):
         print("compare_df")
         clf.finalize_model(best_model)
         pipeline=pickle.dumps(clf.save_model(best_model, model_name='best_model'))
+        os.remove("best_model.pkl")
         compare_df = pickle.dumps(compare_df)
         timestamp=datetime.now()
         model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df})
