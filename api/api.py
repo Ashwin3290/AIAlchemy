@@ -191,22 +191,16 @@ class regression(Resource):
             df=validity
         else:
             return validity
-        rgr.setup(df, target=chosen_target, silent=True)
+        rgr.setup(df, target=choosen_target)
         best_model = rgr.compare_models()
         compare_df = rgr.pull()
         rgr.finalize_model(best_model)
         pipeline=pickle.dumps(rgr)
         timestamp=datetime.now()
         model_id=model.insert_one({"time_stamp":timestamp,"model":"pipeline"})
+        print("model_id")
         model_url=url_for("get_model",model_id=model_id,_external=True)
         user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":model_id,"time_stamp":timestamp}})
-        data={
-            "time_stamp":timestamp,
-            "session_id": session_id,
-            "password": password,
-            
-        }
-        user_data.insert_one()
         return {"status":True,"message":"Model created successfully"}
 api.add_resource(regression,"/regression")
 
@@ -226,7 +220,7 @@ class classification(Resource):
             print("validity")
         else:
             return validity
-        clf.setup(df, target=chosen_target, silent=True)
+        clf.setup(df, target=choosen_target)
         best_model = clf.compare_models()
         compare_df = clf.pull()
         print("compare_df")
