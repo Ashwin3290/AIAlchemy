@@ -192,7 +192,6 @@ class regression(Resource):
         password=args["password"]
         choosen_target=args["target"]
         rgr=RegressionExperiment()
-        print("Experimnet")
         validity=check_validity(session_id,password)
         if isinstance(validity,pd.DataFrame):
             df=validity
@@ -202,18 +201,16 @@ class regression(Resource):
         rgr.setup(df, target=choosen_target)
         best_model = rgr.compare_models()
         compare_df = rgr.pull()
-        print("compare_df")
         rgr.finalize_model(best_model)
         pipeline=pickle.dumps(rgr.save_model(best_model, model_name='best_model'))
         os.remove("best_model.pkl")
-
+        model_comparison = compare_df.to_dict()
         compare_df = pickle.dumps(compare_df)
         timestamp=datetime.now()
-        model_id=str(model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df}))
-        print("model_id")
+        model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df}).inserted_id
         model_url=url_for("get_model",file_id=model_id,_external=True)
         user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":str(model_id),"time_stamp":timestamp}})
-        return {"status":True,"message":"Model created successfully"}
+        return {"status":True,"message":"Model created successfully","model_comparison":model_comparison}
 api.add_resource(regression,"/regression")
 
 
