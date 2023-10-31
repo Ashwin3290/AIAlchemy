@@ -1,6 +1,6 @@
-bson
-Flask-RESTful
-Flask
+flask_restful
+pymongo
 numpy
 pycaret
-pymongo
+pandas
+bson

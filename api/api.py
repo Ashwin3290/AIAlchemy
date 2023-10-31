@@ -31,6 +31,12 @@ credential.add_argument("session_id",type=str,help="session_id is required",requ
 credential.add_argument("password",type=str,help="password is required",required=True)
 credential.add_argument("target",type=str,help="target is required",required=True)
 
+
+plot=reqparse.RequestParser()
+plot.add_argument("session_id",type=str,help="session_id is required",required=True)
+plot.add_argument("password",type=str,help="password is required",required=True)
+
+
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
@@ -185,8 +191,8 @@ class regression(Resource):
         session_id=args["session_id"]
         password=args["password"]
         choosen_target=args["target"]
-        rgr=RegressionExperiment
-        print("Experiment")
+        rgr=RegressionExperiment()
+        print("Experimnet")
         validity=check_validity(session_id,password)
         if isinstance(validity,pd.DataFrame):
             df=validity
@@ -200,11 +206,13 @@ class regression(Resource):
         rgr.finalize_model(best_model)
         pipeline=pickle.dumps(rgr.save_model(best_model, model_name='best_model'))
         os.remove("best_model.pkl")
+
+        compare_df = pickle.dumps(compare_df)
         timestamp=datetime.now()
-        model_id=model.insert_one({"time_stamp":timestamp,"model":"pipeline","compare_df":compare_df})
+        model_id=str(model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df}))
         print("model_id")
         model_url=url_for("get_model",file_id=model_id,_external=True)
-        user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":model_id,"time_stamp":timestamp}})
+        user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":str(model_id),"time_stamp":timestamp}})
         return {"status":True,"message":"Model created successfully"}
 api.add_resource(regression,"/regression")
 
@@ -215,45 +223,49 @@ class classification(Resource):
         session_id=args["session_id"]
         password=args["password"]
         choosen_target=args["target"]
-
         clf=ClassificationExperiment
-        print("Experimnet")
         validity=check_validity(session_id,password)
         if isinstance(validity,pd.DataFrame):
             df=validity
-            print("validity")
         else:
             return validity
         clf.setup(df, target=choosen_target)
         best_model = clf.compare_models()
         compare_df = clf.pull()
-        print("compare_df")
         clf.finalize_model(best_model)
         pipeline=pickle.dumps(clf.save_model(best_model, model_name='best_model'))
         os.remove("best_model.pkl")
+        model_comparison = compare_df.to_dict()
         compare_df = pickle.dumps(compare_df)
         timestamp=datetime.now()
-        model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df})
-        print("model_id")
+        model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df}).inserted_id
         model_url=url_for("get_model",file_id=model_id,_external=True)
         user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":str(model_id),"time_stamp":timestamp}})
-        return {"status":True,"message":"Model created successfully"}
+        return {"status":True,"message":"Model created successfully","model_comparison":model_comparison}
 api.add_resource(classification,"/classification")
 
 class get_plots(Resource):
     def get(self):
-        args=credential.parse_args()
+        args=plot.parse_args()
         session_id=args["session_id"]
         password=args["password"]
-        model_id=user_data.find_one({"session_id":session_id,"password":password},{"model_id":1})
+        model_id=list(user_data.find_one({"session_id":session_id,"password":password},{"model_id":1}))["model_id"]
+        print(model_id)
         model_data=model.find_one({"_id":ObjectId(model_id)})
-        pipeline=pickle.loads(model_data["model"])
+        pipeline=pickle.loads(io.BytesIO(model_data["model"]))
+        print("loaded")
         feature_importance = plot_model(pipeline, plot='feature')
+        print(feature_importance)
         plt.tight_layout()
         image_data = BytesIO()
-        plt.savefig(image_data, format='png')
+        img=plt.savefig(image_data, format='png')
+        print(img)
+        plt.imshow(img)
+        plt.axis('off')  # Turn off axis labels and ticks
+        plt.show()        
         image_data.seek(0)
         response = Response(image_data.read(), content_type='image/png')
+        print(type(response))
         return response 
 api.add_resource(get_plots,"/plots")
 
