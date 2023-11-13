@@ -43,7 +43,7 @@ def create_app():
 
     app.config['credential'] = credential
     app.config['plot'] = plot
-    
+
     return app
 
 
@@ -294,3 +294,6 @@ api.add_resource(get_cluster_plots,"/cluster_plots")
 if __name__ == '__main__':
     app.create_app()
     app.run(debug=True)
+
+#pip install waitress
+#waitress-serve --port=5000 api:create_app
