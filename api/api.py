@@ -27,6 +27,9 @@ def create_app():
     user_data=db["user_data"]
     model=db["model_data"]
 
+    app.config['dataset'] = db["dataset"]
+    app.config['user_data'] = db["user_data"]
+    app.config['model'] = db["model_data"]
 
     credential=reqparse.RequestParser()
     credential.add_argument("session_id",type=str,help="session_id is required",required=True)
@@ -37,6 +40,11 @@ def create_app():
     plot=reqparse.RequestParser()
     plot.add_argument("session_id",type=str,help="session_id is required",required=True)
     plot.add_argument("password",type=str,help="password is required",required=True)
+
+    app.config['credential'] = credential
+    app.config['plot'] = plot
+    
+    return app
 
 
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
