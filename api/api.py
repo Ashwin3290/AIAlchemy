@@ -17,24 +17,26 @@ from pycaret.regression import RegressionExperiment
 import pycaret.classification as ClassificationExperiment
 from datetime import datetime
 
-app = Flask((__name__))
-api=Api(app) 
-client = MongoClient("mongodb://localhost:27017")  
-db = client["Mlalchemy"]  
-dataset = db["dataset"]
-user_data=db["user_data"]
-model=db["model_data"]
+def create_app():
+
+    app = Flask((__name__))
+    api=Api(app) 
+    client = MongoClient("mongodb://localhost:27017")  
+    db = client["Mlalchemy"]  
+    dataset = db["dataset"]
+    user_data=db["user_data"]
+    model=db["model_data"]
 
 
-credential=reqparse.RequestParser()
-credential.add_argument("session_id",type=str,help="session_id is required",required=True)
-credential.add_argument("password",type=str,help="password is required",required=True)
-credential.add_argument("target",type=str,help="target is required",required=True)
+    credential=reqparse.RequestParser()
+    credential.add_argument("session_id",type=str,help="session_id is required",required=True)
+    credential.add_argument("password",type=str,help="password is required",required=True)
+    credential.add_argument("target",type=str,help="target is required",required=True)
 
 
-plot=reqparse.RequestParser()
-plot.add_argument("session_id",type=str,help="session_id is required",required=True)
-plot.add_argument("password",type=str,help="password is required",required=True)
+    plot=reqparse.RequestParser()
+    plot.add_argument("session_id",type=str,help="session_id is required",required=True)
+    plot.add_argument("password",type=str,help="password is required",required=True)
 
 
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
@@ -195,7 +197,6 @@ class regression(Resource):
         validity=check_validity(session_id,password)
         if isinstance(validity,pd.DataFrame):
             df=validity
-            print("validity")
         else:
             return validity
         rgr.setup(df, target=choosen_target)
@@ -247,24 +248,41 @@ class get_plots(Resource):
         session_id=args["session_id"]
         password=args["password"]
         model_id=list(user_data.find_one({"session_id":session_id,"password":password},{"model_id":1}))["model_id"]
-        print(model_id)
         model_data=model.find_one({"_id":ObjectId(model_id)})
         pipeline=pickle.loads(io.BytesIO(model_data["model"]))
-        print("loaded")
-        feature_importance = plot_model(pipeline, plot='feature')
-        print(feature_importance)
+        plt.figure(figsize=(10, 8))
+        plot_model(pipeline, plot='feature')
         plt.tight_layout()
+
         image_data = BytesIO()
-        img=plt.savefig(image_data, format='png')
-        print(img)
-        plt.imshow(img)
-        plt.axis('off')  # Turn off axis labels and ticks
-        plt.show()        
+        plt.savefig(image_data, format='png')
         image_data.seek(0)
+
         response = Response(image_data.read(), content_type='image/png')
-        print(type(response))
-        return response 
+        return response
+
 api.add_resource(get_plots,"/plots")
 
+class get_cluster_plots(Resource):
+    def get(self):
+        args=plot.parse_args()
+        session_id=args["session_id"]
+        password=args["password"]
+        model_id=list(user_data.find_one({"session_id":session_id,"password":password},{"model_id":1}))["model_id"]
+        model_data=model.find_one({"_id":ObjectId(model_id)})
+        pipeline=pickle.loads(io.BytesIO(model_data["model"]))
+        plt.figure(figsize=(10, 8))
+        plot_model(pipeline)
+        plt.tight_layout()
+        image_data = BytesIO()
+        plt.savefig(image_data, format='png')
+        image_data.seek(0)
+
+        response = Response(image_data.read(), content_type='image/png')
+        return response
+
+api.add_resource(get_cluster_plots,"/cluster_plots")
+
 if __name__ == '__main__':
+    app.create_app()
     app.run(debug=True)
