@@ -2,10 +2,11 @@ from operator import index
 import streamlit as st
 import plotly.express as px
 from pycaret.regression import setup, compare_models, pull, save_model, load_model
-import pandas_profiling
+from ydata_profiling import ProfileReport
 import pandas as pd
 from streamlit_pandas_profiling import st_profile_report
-import os 
+import os
+from pydantic_settings import BaseSettings
 
 if os.path.exists('./dataset.csv'): 
     df = pd.read_csv('dataset.csv', index_col=None)
@@ -26,15 +27,14 @@ if choice == "Upload":
 
 if choice == "Profiling": 
     st.title("Exploratory Data Analysis")
-    profile_df = df.profile_report()
+    # profile_df = df.profile_report()
+    profile_df = ProfileReport(df, title="Pandas Profiling Report")
     st_profile_report(profile_df)
 
 if choice == "Modelling": 
     chosen_target = st.selectbox('Choose the Target Column', df.columns)
     if st.button('Run Modelling'): 
-        setup(df, target=chosen_target, silent=True)
-        setup_df = pull()
-        st.dataframe(setup_df)
+        setup(df, target=chosen_target)
         best_model = compare_models()
         compare_df = pull()
         st.dataframe(compare_df)
