@@ -1,0 +1,15 @@
+This Python script defines a Flask application for a machine learning API. The application is created by the create_app function, which also sets up the API, database connections, and request parsers.
+
+Here's a brief overview of the main components:
+
+Flask: This is the main class for creating a Flask web application.
+Api: This class from Flask-RESTful provides a way to build REST APIs with Flask.
+MongoClient: This class from PyMongo is used to interact with MongoDB.
+RequestParser: This class from Flask-RESTful is used to parse the request arguments.
+The create_app function does the following:
+
+Creates a Flask application and an API.
+Connects to a MongoDB database and sets up collections for datasets, user data, and models.
+Creates request parsers for credentials and plots. These parsers are used to validate and parse the incoming request data.
+Stores the database collections and request parsers in the application's configuration so they can be accessed throughout the application.
+The returned Flask application can be run by a WSGI server such as Gunicorn or Waitress.
