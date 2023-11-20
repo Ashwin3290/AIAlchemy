@@ -1,16 +1,48 @@
 [{
   "_id": {
-    "$oid": "653b81470dc4014fb84415b6"
+    "$oid": "655b95d87fdc32956edf7ea4"
   },
   "time_stamp": {
-    "$date": "2023-10-27T15:57:05.552Z"
+    "$date": "2023-11-20T23:05:02.817Z"
   },
-  "session_id": "5304",
-  "password": "y9dveb",
+  "session_id": "4156",
+  "password": "evnh97",
   "option": "c",
-  "file_id": "653b81470dc4014fb84415b5",
+  "file_id": "655b95d67fdc32956edf7ea3",
   "content_type": "text/csv",
-  "dataset_url": "http://127.0.0.1:5000/get_dataset/653b81470dc4014fb84415b5",
-  "model_url": "http://127.0.0.1:5000/get_model/%3Cpymongo.results.InsertOneResult%20object%20at%200x000001CDADC49240%3E",
-  "model_id": "<pymongo.results.InsertOneResult object at 0x000001CDADC49240>"
+  "dataset_url": "http://127.0.0.1:5000/get_dataset/655b95d67fdc32956edf7ea3",
+  "model_url": "http://127.0.0.1:5000/get_model/655b98c64b4b2c8c58406647",
+  "model_id": "655b98c64b4b2c8c58406647"
+},
+{
+  "_id": {
+    "$oid": "655b96117fdc32956edf7ea8"
+  },
+  "time_stamp": {
+    "$date": "2023-11-20T22:53:29.460Z"
+  },
+  "session_id": "4156",
+  "password": "",
+  "option": "c",
+  "file_id": "655b96117fdc32956edf7ea7",
+  "content_type": "text/csv",
+  "dataset_url": "http://127.0.0.1:5000/get_dataset/655b96117fdc32956edf7ea7",
+  "model_url": null,
+  "model_id": null
+},
+{
+  "_id": {
+    "$oid": "655b97307fdc32956edf7eab"
+  },
+  "time_stamp": {
+    "$date": "2023-11-20T23:09:08.085Z"
+  },
+  "session_id": "7548",
+  "password": "zvsgam",
+  "option": "r",
+  "file_id": "655b97307fdc32956edf7eaa",
+  "content_type": "text/csv",
+  "dataset_url": "http://127.0.0.1:5000/get_dataset/655b97307fdc32956edf7eaa",
+  "model_url": "http://127.0.0.1:5000/get_model/655b99bc4b4b2c8c58406648",
+  "model_id": "655b99bc4b4b2c8c58406648"
 }]

@@ -157,9 +157,9 @@ api.add_resource(file_upload,"/upload")
 
 
 @app.route("/get_model/<file_id>")
-def get_model(model_id):
-    file_data = model.find_one({"_id":ObjectId(model_id)},{"model":1})
-    data=user_data.find_one({"model_id":model_id})
+def get_model(file_id):
+    file_data = model.find_one({"_id":ObjectId(file_id)},{"model":1})
+    data=user_data.find_one({"model_id":file_id})
     if file_data:
         return send_file(
             io.BytesIO(file_data["model"]),
@@ -216,7 +216,7 @@ class regression(Resource):
         model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df}).inserted_id
         model_url=url_for("get_model",file_id=model_id,_external=True)
         user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":str(model_id),"time_stamp":timestamp}})
-        return {"status":True,"message":"Model created successfully","model_comparison":model_comparison}
+        return {"status":True,"model_url":model_url,"message":"Model created successfully","model_comparison":model_comparison}
 api.add_resource(regression,"/regression")
 
 
@@ -244,7 +244,7 @@ class classification(Resource):
         model_id=model.insert_one({"time_stamp":timestamp,"model":pipeline,"compare_df":compare_df}).inserted_id
         model_url=url_for("get_model",file_id=model_id,_external=True)
         user_data.update_one({"session_id":session_id,"password":password},{"$set":{"model_url":model_url,"model_id":str(model_id),"time_stamp":timestamp}})
-        return {"status":True,"message":"Model created successfully","model_comparison":model_comparison}
+        return {"status":True,"model_url":model_url,"message":"Model created successfully","model_comparison":model_comparison}
 api.add_resource(classification,"/classification")
 
 class get_plots(Resource):
@@ -289,7 +289,8 @@ class get_cluster_plots(Resource):
 api.add_resource(get_cluster_plots,"/cluster_plots")
 
 
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
 
 #pip install waitress
 #waitress-serve --port=5000 api:create_app
