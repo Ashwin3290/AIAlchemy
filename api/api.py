@@ -17,34 +17,31 @@ from pycaret.regression import RegressionExperiment
 import pycaret.classification as ClassificationExperiment
 from datetime import datetime
 
-def create_app():
+app = Flask((__name__))
+api=Api(app) 
+client = MongoClient("mongodb://localhost:27017")  
+db = client["Mlalchemy"]  
+dataset = db["dataset"]
+user_data=db["user_data"]
+model=db["model_data"]
 
-    app = Flask((__name__))
-    api=Api(app) 
-    client = MongoClient("mongodb://localhost:27017")  
-    db = client["Mlalchemy"]  
-    dataset = db["dataset"]
-    user_data=db["user_data"]
-    model=db["model_data"]
+app.config['dataset'] = db["dataset"]
+app.config['user_data'] = db["user_data"]
+app.config['model'] = db["model_data"]
 
-    app.config['dataset'] = db["dataset"]
-    app.config['user_data'] = db["user_data"]
-    app.config['model'] = db["model_data"]
-
-    credential=reqparse.RequestParser()
-    credential.add_argument("session_id",type=str,help="session_id is required",required=True)
-    credential.add_argument("password",type=str,help="password is required",required=True)
-    credential.add_argument("target",type=str,help="target is required",required=True)
+credential=reqparse.RequestParser()
+credential.add_argument("session_id",type=str,help="session_id is required",required=True)
+credential.add_argument("password",type=str,help="password is required",required=True)
+credential.add_argument("target",type=str,help="target is required",required=True)
 
 
-    plot=reqparse.RequestParser()
-    plot.add_argument("session_id",type=str,help="session_id is required",required=True)
-    plot.add_argument("password",type=str,help="password is required",required=True)
+plot=reqparse.RequestParser()
+plot.add_argument("session_id",type=str,help="session_id is required",required=True)
+plot.add_argument("password",type=str,help="password is required",required=True)
 
-    app.config['credential'] = credential
-    app.config['plot'] = plot
+app.config['credential'] = credential
+app.config['plot'] = plot
 
-    return app
 
 
 ALLOWED_EXTENSIONS = {'xlsx', 'csv'}
@@ -291,9 +288,8 @@ class get_cluster_plots(Resource):
 
 api.add_resource(get_cluster_plots,"/cluster_plots")
 
-if __name__ == '__main__':
-    app.create_app()
-    app.run(debug=True)
+
+app.run(debug=True)
 
 #pip install waitress
 #waitress-serve --port=5000 api:create_app
