@@ -37,10 +37,9 @@ def regression(df, target):
     compare_df = rgr.pull()
     rgr.finalize_model(best_model)
     pipeline = pickle.dumps(rgr.save_model(best_model, model_name='best_model'))
-    os.remove("best_model.pkl")
     model_comparison = compare_df.to_dict()
     compare_df = pickle.dumps(compare_df)
-    return {"status":True,"message":"Model created successfully","model_comparison":model_comparison}
+    return model_comparison
 
 def classification(df, target):
     clf = ClassificationExperiment
@@ -49,10 +48,9 @@ def classification(df, target):
     compare_df = clf.pull()
     clf.finalize_model(best_model)
     pipeline = pickle.dumps(clf.save_model(best_model, model_name='best_model'))
-    os.remove("best_model.pkl")
     model_comparison = compare_df.to_dict()
     compare_df = pickle.dumps(compare_df)
-    return {"status":True,"message":"Model created successfully","model_comparison":model_comparison}
+    return model_comparison
 
 def get_plots(pipeline):
     plt.figure(figsize=(10, 8))
@@ -88,7 +86,7 @@ if __name__ == '__main__':
     main(file_path, target, option)
 
 
-    from operator import index
+from operator import index
 import streamlit as st
 import plotly.express as px
 from pycaret.regression import setup, compare_models, pull, save_model, load_model
