@@ -165,3 +165,7 @@ etc
 Scripts
 share
 pyvenv.cfg
+
+
+#React js modules
+node_modules

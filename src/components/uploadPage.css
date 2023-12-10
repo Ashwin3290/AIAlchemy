@@ -1,0 +1,293 @@
+
+
+body { 
+  background-color: #121212; 
+  color: white;
+  background-image: url("background-image-for-tables.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+
+}
+
+.dropdown-menu {
+  position: relative;
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dropdown-toggle {
+  background-color: #FFC107;
+  color: white;
+  padding: 16px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 200px;
+}
+
+.dropdown-toggle:hover, .dropdown-toggle:focus {
+  background-color: #FF9800;
+}
+
+.dropdown-list {
+  position: absolute;
+  background-color: #FFFFFF;
+  min-width: 200px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 8px;
+}
+
+.dropdown-item {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #EEEEEE;
+}
+
+.fileUpload {
+  padding-top: 90px;
+  padding-left: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+  border: 2px dashed #1475cf;
+  height: 100px;
+  width: 400px;
+  cursor: pointer;
+  border-radius: 5px;
+  display: block;
+  margin: 0 auto;
+}
+
+.window {
+  display: flex;
+  padding: 40px;
+}
+
+.window2 {
+  display: inline;
+  padding-left: 60px;
+  padding-right: 100px;
+}
+
+:root {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --select-color: #424242;
+  --option-color: #757575;
+  --hover-color: #212121;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  align-items: center;
+}
+
+h2 {
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+select {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--select-color);
+  color: var(--text-color);
+}
+
+option {
+  background-color: var(--option-color);
+  color: var(--text-color);
+}
+
+select:hover {
+  background-color: var(--hover-color);
+}
+
+select:focus {
+  outline: 2px;
+}
+
+.columnSelection {
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+  padding: 40px;
+}
+
+.tableHeading {
+  text-align: center;
+}
+
+.columnSel {
+  justify-items: center;
+  align-items: center;
+
+}
+
+.button { 
+  margin-left: auto; 
+  margin-right: auto; 
+  padding-top: 20px;
+  display: block;
+  margin: 0 auto;
+}
+
+.button-click { 
+  background-color: #008CBA; 
+  border: none; color: white; 
+  padding: 15px 32px;
+  text-align: center; 
+  text-decoration: none; 
+  display: inline-block; 
+  font-size: 16px; 
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+
+h1 { 
+  text-align: center; 
+}
+
+input { 
+  margin-left: auto; 
+  margin-right: auto; 
+  justify-content: center;
+}
+
+select { 
+  margin-left: auto; 
+  margin-right: auto; 
+}
+
+/* Apply styling to the table */
+table {
+  width: 80%;
+  margin: 0 auto; /* Center the table on the page */
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* Style for table headers (th) */
+th {
+  background-color: #3498db;
+  color: white;
+  padding: 10px 15px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #2979a1;
+}
+
+/* Style for table cells (td) */
+td {
+  padding: 10px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  color: black;
+}
+
+/* Style for even rows on hover */
+tr:nth-child(even):hover {
+  background-color: #e0e0e0;
+}
+
+/* Style for odd rows on hover */
+tr:nth-child(odd):hover {
+  background-color: #f0f0f0;
+}
+
+
+a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Style for buttons with a different background color on hover */
+
+
+/* Style for a rounded border around images */
+img {
+  border-radius: 8px;
+}
+
+/* Style for a centered container with a maximum width */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Style for a subtle box shadow on elements */
+.box-shadow {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for a responsive, centered text within a box */
+.text-box {
+  text-align: center;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin: 20px;
+}
+
+/* Style for a full-width background color section with white text */
+.section {
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+}
+
+/* Style for a simple alert box */
+.alert {
+  background-color: #f44336;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+/* Style for a horizontal line */
+.hr {
+  border: 1px solid #ccc;
+  margin: 20px 0;
+}
+
+/* Style for a subtle fade-in effect */
+.fade-in {
+  animation: fadeIn 1s;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
