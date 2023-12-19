@@ -268,6 +268,120 @@ class get_plots(Resource):
 
 api.add_resource(get_plots,"/plots")
 
+
+class ClusteringResource(Resource):
+    def get(self):
+        data=request.get_json()
+        session_id=args["session_id"]
+        password=args["password"]
+        clusters=int(data['clusters'])
+
+        validity=check_validity(session_id,password)
+        if isinstance(validity,pd.DataFrame):
+            data=validity
+        else:
+            return validity
+
+        object_columns = data.select_dtypes(include=['object']).columns
+
+        # Identify columns that might contain dates and convert them to datetime
+        for column in object_columns:
+            try:
+                data[column] = pd.to_datetime(data[column])
+            except (TypeError, ValueError):
+                pass  # Ignore columns that cannot be converted timestamp
+
+        timestamp_columns = data.select_dtypes(include=['datetime64']).columns
+        if timestamp_columns.any():
+            primary_timestamp_column = timestamp_columns[0]
+            data.drop(columns=list(timestamp_columns[1:]), inplace=True)
+            data.set_index(primary_timestamp_column, inplace=True)
+            # data = data.resample('D').sum()
+            data.index = pd.to_datetime(data.index)
+
+        data = data.select_dtypes(exclude=['object'])
+        data.fillna(method="ffill", inplace=True)
+        data.dropna(inplace=True)
+
+        # Outlier detection and removal using Z-score
+        z_scores = stats.zscore(data.select_dtypes(include=['float64', 'int64']))
+        abs_z_scores = abs(z_scores)
+        filtered_entries = (abs_z_scores < 3).all(axis=1)
+        data = data[filtered_entries]
+
+        # Check and handle stationarity
+        for column in data.columns:
+            d = ndiffs(data[column], test='adf')
+            if d > 0:
+                data[column] = data[column].diff(d)
+
+        data.fillna(method="ffill", inplace=True)
+        data.dropna(inplace=True)
+        scaler = StandardScaler()
+        scaled_data = scaler.fit_transform(data)
+
+        # silhouette_scores = []
+        # for i in range(2, 11):
+        #     kmeans = KMeans(n_clusters=i, init='k-means++', max_iter=300, n_init=10, random_state=0)
+        #     kmeans.fit(scaled_data)
+        #     labels = kmeans.labels_
+
+        #     # Check condition 1: All clusters should have a silhouette score greater than the average score
+        #     avg_score = silhouette_score(scaled_data, labels)
+        #     sample_silhouette_values = silhouette_samples(scaled_data, labels)
+            
+        #     if all(s > avg_score for s in sample_silhouette_values):
+        #         # Check condition 2: Avoid wide fluctuations in the size of clusters
+        #         cluster_sizes = [np.sum(labels == j) for j in range(i)]
+        #         if max(cluster_sizes) / min(cluster_sizes) < 2.0:
+        #             silhouette_scores.append((i, avg_score))
+
+        # # Find the optimal number of clusters with the highest average silhouette score
+        # optimal_clusters = max(silhouette_scores, key=lambda x: x[1], default=(2, 0))[0]+1
+        # print("Optimal number of clusters:", optimal_clusters)
+
+        # # Plot silhouette scores
+        # x_values, y_values = zip(*silhouette_scores)
+        # plt.plot(x_values, y_values, marker='o')
+        # plt.axhline(y=np.mean(y_values), color="red", linestyle="--", label="Average Silhouette Score")
+        # plt.title('Silhouette Score Method')
+        # plt.xlabel('Number of Clusters')
+        # plt.ylabel('Silhouette Score')
+        # plt.legend()
+        # plt.show()
+
+        # Perform K-means clustering with the optimal number of clusters
+        pca = PCA(n_components=2)
+        pca_result = pca.fit_transform(scaled_data)
+
+        # 2. Perform K-means Clustering on PCA result
+        kmeans = KMeans(n_clusters=clusters , random_state=0)  # Update the number of clusters
+        data['Cluster'] = kmeans.fit_predict(pca_result)
+
+        # 3. Visualize the Clusters in 2D PCA Space
+        plt.figure(figsize=(10, 6))
+        sns.scatterplot(x=pca_result[:, 0], y=pca_result[:, 1], hue=data['Cluster'], palette='viridis', legend='full')
+        plt.title(f'Clusters in 2D PCA Space (Number of Clusters: {clusters})')
+        plt.xlabel('Principal Component 1')
+        plt.ylabel('Principal Component 2')
+        plt.show()
+
+        # Analyze the characteristics of each cluster
+        cluster_stats = data.groupby('Cluster').mean()
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+
+        # Convert the BytesIO object to a base64 string
+        image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        buf.close()
+
+        # Create a data URL from the base64 string
+        image_data_url = 'data:image/png;base64,' + urllib.parse.quote(image_base64)
+        return {"status": True, "cluster_plot": image_data_url,"cluster_stats":cluster_stats.to_dict()}
+
+api.add_resource(ClusteringResource, '/clustering')
+
 class get_cluster_plots(Resource):
     def get(self):
         args=plot.parse_args()
